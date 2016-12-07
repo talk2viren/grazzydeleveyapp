@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Delivery App</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="base_url">http://grazzy.way2gps.com/index.php/api/</string>
+    <string name="Name">firstname</string>
+    <string name="phone_number">phone</string>
+    <string name="sms">http://smssigma.com/API/WebSMS/Http/v1.0a/index.php?</string>
+    <string name="user_name">username=bigperl</string>
+    <string name="password">password=Bigperl123</string>
+    <string name="token">did</string>
+    <string name="orders">delboyOrders/</string>
+    <string name="login">delboylogin</string>
+    <string name="changestatus">changeorderstatus</string>
+    <string name="delboyfeedback">delboyTorestfeedback</string>
+    <string name="addlocation">adddelboylocation</string>
+</resources>

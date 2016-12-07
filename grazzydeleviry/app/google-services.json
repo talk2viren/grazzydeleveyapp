@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "647035634747",
+    "firebase_url": "https://big-perl-grazzy-android.firebaseio.com",
+    "project_id": "big-perl-grazzy-android",
+    "storage_bucket": "big-perl-grazzy-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:647035634747:android:2da583e9ef907ee9",
+        "android_client_info": {
+          "package_name": "delivery.grazzy.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "647035634747-k0diq05b6hfh5kqf7roi45cr2bjrqd0l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "delivery.grazzy.app",
+            "certificate_hash": "66ED4FAB32E0779D311F3B8B3F199CE8FD458E33"
+          }
+        },
+        {
+          "client_id": "647035634747-5kusqqcec0jj560rjijkbqjm4g8o1tmq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn2Cq9Wm2WKdoX9cgQRsXVsMK97pipnvU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "647035634747-5kusqqcec0jj560rjijkbqjm4g8o1tmq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

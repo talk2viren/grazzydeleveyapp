@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#f2f2f2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/white"
+        android:weightSum="9"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:layout_margin="2dp"
+        >
+
+        <TextView
+            android:background="@color/white"
+            android:layout_height="wrap_content"
+            android:id="@+id/order_no"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textColor="@color/red"
+            android:textStyle="bold"
+            android:text="234567" />
+
+
+        <TextView
+            android:id="@+id/pickup"
+            android:textColor="@color/black"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:background="@color/white"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:text="10:25 AM\nCCD Lower sdsdfsfsdfsf"
+
+            />
+
+
+        <TextView
+            android:id="@+id/delivery"
+            android:textColor="@color/black"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:background="@color/white"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:text="11:45 AM\nPS 23 sdfsdfsdfsdf"
+
+            />
+
+
+        <TextView
+            android:id="@+id/action"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="wrap_content"
+            android:text="Accept"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+
+            android:background="@color/white"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+
+            />
+
+
+
+    </LinearLayout>
+
+</LinearLayout>
