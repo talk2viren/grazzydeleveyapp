@@ -143,9 +143,9 @@ public class AppController extends Application {
 
                          if(response.contains("id"))
                          {
-                             JSONObject jsonObject = new JSONObject(response);
+                             JSONArray jsonArray = new JSONArray(response);
 
-                             sharedPreferences_editor.putString("id",jsonObject.get("id").toString());
+                             sharedPreferences_editor.putString("id",jsonArray.getJSONObject(0).get("id").toString());
 
 
                          }else {

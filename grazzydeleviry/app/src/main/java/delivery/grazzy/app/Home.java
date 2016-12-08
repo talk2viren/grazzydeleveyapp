@@ -1,6 +1,7 @@
 package delivery.grazzy.app;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -214,6 +215,14 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
 
         };
 
+        manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps();
+
+        }
+
 
     }
 
@@ -225,9 +234,9 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                     @Override
                     public void onResponse(String response) {
 
-                        loading.dismiss();
 
-                        Log.e("location  response", "" +response);
+
+                        Log.e("location insert", "" +response);
 
 
 
@@ -427,18 +436,18 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                 break;
 
             case R.id.logout_bg:
-//                AppController.getInstance().option_selectd = 3;
-//                logout_bg.setBackgroundResource(R.color.bg);
-//                logout_text.setTypeface(null, Typeface.BOLD);
-//                logout_text.setTextColor(getResources().getColor(R.color.colorPrimary));
-//
-//                AppController.getInstance().verification = false;
-//                AppController.getInstance().sharedPreferences_editor.putBoolean("login", false);
-//                AppController.getInstance().sharedPreferences_editor.commit();
-//                startActivity(new Intent(Home.this, MainActivity.class));
-//                finish();
+                AppController.getInstance().option_selectd = 3;
+                logout_bg.setBackgroundResource(R.color.bg);
+                logout_text.setTypeface(null, Typeface.BOLD);
+                logout_text.setTextColor(getResources().getColor(R.color.colorPrimary));
 
-                startActivity(new Intent(Home.this, Track.class));
+                AppController.getInstance().verification = false;
+                AppController.getInstance().sharedPreferences_editor.putBoolean("login", false);
+                AppController.getInstance().sharedPreferences_editor.commit();
+                startActivity(new Intent(Home.this, MainActivity.class));
+                finish();
+
+//                startActivity(new Intent(Home.this, Track.class));
 
                 break;
 
@@ -526,52 +535,62 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                     @Override
                     public void onResponse(String response) {
 
-                        Log.e("response", "" + response);
+                        if(response.contains("Orders could not be found"))
+                        {
 
-                        try {
-                            JSONArray jsonArray = new JSONArray(response);
-                            Log.e("jsonArray", "" + jsonArray.length());
+                            Toast.makeText(Home.this, "Orders have not been assigned yet", Toast.LENGTH_SHORT).show();
 
-                            if (jsonArray.length() == 0) {
-                                Toast.makeText(Home.this, "No new Orders", Toast.LENGTH_SHORT).show();
+                        }else
+                        {
+
+
+                            Log.e("response", "" + response);
+
+                            try {
+                                JSONArray jsonArray = new JSONArray(response);
+                                Log.e("jsonArray", "" + jsonArray.length());
+
+                                if (jsonArray.length() == 0) {
+                                    Toast.makeText(Home.this, "No new Orders", Toast.LENGTH_SHORT).show();
+                                }
+
+                                for (int i = 0; i < jsonArray.length(); i++) {
+                                    order_number.add(jsonArray.getJSONObject(i).get("order_number").toString());
+                                    id.add(jsonArray.getJSONObject(i).get("id").toString());
+                                    customer_id.add(jsonArray.getJSONObject(i).get("customer_id").toString());
+                                    customer_name.add(jsonArray.getJSONObject(i).get("firstname").toString());
+                                    restaurant_id.add(jsonArray.getJSONObject(i).get("restaurant_id").toString());
+                                    restaurant_name.add(jsonArray.getJSONObject(i).get("restaurant_name").toString());
+                                    restaurant_phone.add(jsonArray.getJSONObject(i).get("restaurant_phone").toString());
+                                    restaurant_address.add(jsonArray.getJSONObject(i).get("restaurant_address").toString());
+                                    restaurant_latitude.add(jsonArray.getJSONObject(i).get("restaurant_latitude").toString());
+                                    restaurant_langitude.add(jsonArray.getJSONObject(i).get("restaurant_langitude").toString());
+                                    preparation_time.add(jsonArray.getJSONObject(i).get("preparation_time").toString());
+                                    phone.add(jsonArray.getJSONObject(i).get("phone").toString());
+                                    ordered_on.add(jsonArray.getJSONObject(i).get("ordered_on").toString());
+                                    status.add(jsonArray.getJSONObject(i).get("status").toString());
+                                    order_type.add(jsonArray.getJSONObject(i).get("order_type").toString());
+                                    total_cost.add(jsonArray.getJSONObject(i).get("total_cost").toString());
+                                    shipping_lat.add(jsonArray.getJSONObject(i).get("shipping_lat").toString());
+                                    shipping_long.add(jsonArray.getJSONObject(i).get("shipping_long").toString());
+                                    delivered_by.add(jsonArray.getJSONObject(i).get("delivered_by").toString());
+                                    passcode.add(jsonArray.getJSONObject(i).get("passcode").toString());
+                                    delivered_on.add(jsonArray.getJSONObject(i).get("delivered_on").toString());
+                                    delivery_location.add(jsonArray.getJSONObject(i).get("delivery_location").toString());
+                                    customer_image.add(jsonArray.getJSONObject(i).get("customer_image").toString());
+
+
+                                }
+
+                                ordersAdapter.notifyDataSetChanged();
+
+
+                            } catch (JSONException e) {
+
+
+                                Log.e("JSONException", "" + e.toString());
+
                             }
-
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                order_number.add(jsonArray.getJSONObject(i).get("order_number").toString());
-                                id.add(jsonArray.getJSONObject(i).get("id").toString());
-                                customer_id.add(jsonArray.getJSONObject(i).get("customer_id").toString());
-                                customer_name.add(jsonArray.getJSONObject(i).get("firstname").toString());
-                                restaurant_id.add(jsonArray.getJSONObject(i).get("restaurant_id").toString());
-                                restaurant_name.add(jsonArray.getJSONObject(i).get("restaurant_name").toString());
-                                restaurant_phone.add(jsonArray.getJSONObject(i).get("restaurant_phone").toString());
-                                restaurant_address.add(jsonArray.getJSONObject(i).get("restaurant_address").toString());
-                                restaurant_latitude.add(jsonArray.getJSONObject(i).get("restaurant_latitude").toString());
-                                restaurant_langitude.add(jsonArray.getJSONObject(i).get("restaurant_langitude").toString());
-                                preparation_time.add(jsonArray.getJSONObject(i).get("preparation_time").toString());
-                                phone.add(jsonArray.getJSONObject(i).get("phone").toString());
-                                ordered_on.add(jsonArray.getJSONObject(i).get("ordered_on").toString());
-                                status.add(jsonArray.getJSONObject(i).get("status").toString());
-                                order_type.add(jsonArray.getJSONObject(i).get("order_type").toString());
-                                total_cost.add(jsonArray.getJSONObject(i).get("total_cost").toString());
-                                shipping_lat.add(jsonArray.getJSONObject(i).get("shipping_lat").toString());
-                                shipping_long.add(jsonArray.getJSONObject(i).get("shipping_long").toString());
-                                delivered_by.add(jsonArray.getJSONObject(i).get("delivered_by").toString());
-                                passcode.add(jsonArray.getJSONObject(i).get("passcode").toString());
-                                delivered_on.add(jsonArray.getJSONObject(i).get("delivered_on").toString());
-                                delivery_location.add(jsonArray.getJSONObject(i).get("delivery_location").toString());
-                                customer_image.add(jsonArray.getJSONObject(i).get("customer_image").toString());
-
-
-                            }
-
-                            ordersAdapter.notifyDataSetChanged();
-
-
-                        } catch (JSONException e) {
-
-
-                            Log.e("JSONException", "" + e.toString());
-
                         }
 
                         loading.dismiss();
@@ -776,5 +795,28 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
 
 
     }
+
+
+    private void buildAlertMessageNoGps() {
+        // TODO Auto-generated method stub
+
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?").setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+
+                startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            }
+        }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                dialog.cancel();
+
+            }
+        });
+        final AlertDialog alert = builder.create();
+        alert.show();
+
+    }
+
 
 }
