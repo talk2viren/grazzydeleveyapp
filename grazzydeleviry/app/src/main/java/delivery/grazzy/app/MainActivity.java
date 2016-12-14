@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     Button generate;
     LinearLayout parent_layout;
 
-    int COARSE_LOCATION_permission, FINE_LOCATION_permission, READ_SMS_permission, RECEIVE_SMS_permission;
+    int COARSE_LOCATION_permission, FINE_LOCATION_permission, READ_SMS_permission, RECEIVE_SMS_permission,CALL_PHONE_permission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
 
         RECEIVE_SMS_permission = ContextCompat.checkSelfPermission(MainActivity.this,
                 "android.permission.RECEIVE_SMS_permission");
+
+        CALL_PHONE_permission = ContextCompat.checkSelfPermission(MainActivity.this,
+                "android.permission.CALL_PHONE_permission");
 
         setContentView(R.layout.activity_main);
 
@@ -188,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
     private void pop_up() {
         // TODO Auto-generated method stub
 
-        if (COARSE_LOCATION_permission != PackageManager.PERMISSION_GRANTED || FINE_LOCATION_permission != PackageManager.PERMISSION_GRANTED || READ_SMS_permission != PackageManager.PERMISSION_GRANTED || RECEIVE_SMS_permission != PackageManager.PERMISSION_GRANTED ) {
+        if (COARSE_LOCATION_permission != PackageManager.PERMISSION_GRANTED || FINE_LOCATION_permission != PackageManager.PERMISSION_GRANTED || READ_SMS_permission != PackageManager.PERMISSION_GRANTED || RECEIVE_SMS_permission != PackageManager.PERMISSION_GRANTED || CALL_PHONE_permission != PackageManager.PERMISSION_GRANTED ) {
             Log.e("", "COARSE_LOCATION_permission "+COARSE_LOCATION_permission +" FINE_LOCATION_permission "+FINE_LOCATION_permission+" READ_SMS_permission "+READ_SMS_permission +" RECEIVE_SMS_permission "+RECEIVE_SMS_permission);
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setMessage("Grazzy App requires SMS and Location permissions.Please grant them to continue.")
@@ -230,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void makeRequest() {
         ActivityCompat.requestPermissions(MainActivity.this,
-                new String[]{"android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.RECEIVE_SMS", "android.permission.READ_SMS"},
+                new String[]{"android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.RECEIVE_SMS", "android.permission.READ_SMS","android.permission.CALL_PHONE"},
                 10);
     }
 

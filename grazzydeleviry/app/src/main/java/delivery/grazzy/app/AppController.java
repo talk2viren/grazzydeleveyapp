@@ -5,11 +5,16 @@ package delivery.grazzy.app;
  */
 import android.app.Application;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.location.Location;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -52,7 +57,12 @@ public class AppController extends Application {
     int option_selectd=0;
     String order_number,customer_id,restaurant_id,total_cost,order_type,delivered_by,passcode,delivered_on,delivery_location,firstname,phone,restaurant_address,restaurant_phone,preparation_time,restaurant_latitude,restaurant_langitude,shipping_lat,shipping_long,id,status;
     Boolean changed=false;
-
+    int no_of_notifications=0;
+    NotificationCompat.Builder builder;
+    Intent go_to_notifications;
+    PendingIntent pendingIntent;
+    Uri alarmSound;
+    NotificationManager nm;
 
 
     @Override
@@ -64,6 +74,9 @@ public class AppController extends Application {
         lruBitmapCache = new LruBitmapCache();
         sharedPreferences = getSharedPreferences("basic_parameters", 0);
         sharedPreferences_editor = sharedPreferences.edit();
+        go_to_notifications = new Intent(this, Home.class);
+        builder = new NotificationCompat.Builder(this);
+        nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
     }
 
@@ -108,6 +121,63 @@ public class AppController extends Application {
 
 
     }
+
+
+    public void create_notification()
+    {
+        // TODO Auto-generated method stub
+
+
+        no_of_notifications++;
+
+        // Use NotificationCompat.Builder to set up our notification.
+
+        // icon appears in device notification bar and right hand corner of
+        // notification
+
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+
+        // This intent is fired when notification is clicked
+        go_to_notifications.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
+        pendingIntent = PendingIntent.getActivity(this, 0, go_to_notifications, 0);
+
+        // Set the intent that will fire when the user taps the notification.
+        builder.setContentIntent(pendingIntent);
+
+        // Large icon appears on the left of the notification
+        // builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),
+        // R.drawable.ic_launcher));
+
+        // Content title, which appears in large type at the top of the
+        // notification
+        builder.setContentTitle("Grazzy");
+
+        // Content text, which appears in smaller text below the title
+        builder.setContentText("You have " + no_of_notifications + " notifications");
+
+        // The subtext, which appears under the text on newer devices.
+        // This will show-up in the devices with Android 4.2 and above only
+        // builder.setSubText("Tap to view documentation about notifications.");
+
+        builder.setAutoCancel(true);
+
+        builder.setLights(Color.BLUE, 500, 500);
+
+        long[] pattern = {200,200,100,100};
+        builder.setVibrate(pattern);
+
+        builder.setStyle(new NotificationCompat.InboxStyle());
+        alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        if(alarmSound != null)
+        {
+            builder.setSound(alarmSound);
+        }
+
+          // Will display the notification in the notification bar
+        nm.notify(0, builder.build());
+
+}
 
     public void setConnectivityListener(ConnectivityReceiver.ConnectivityReceiverListener listener) {
         ConnectivityReceiver.connectivityReceiverListener = listener;

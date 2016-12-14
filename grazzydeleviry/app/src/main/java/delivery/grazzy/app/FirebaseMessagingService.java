@@ -3,6 +3,7 @@ package delivery.grazzy.app;
 /**
  * Created by developer.nithin@gmail.com
  */
+import android.content.Intent;
 import android.util.Log;
 
 import com.google.firebase.messaging.RemoteMessage;
@@ -15,6 +16,11 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
 
-        Log.e("Message",remoteMessage.toString());
+        Log.e("onMessageReceived",remoteMessage.toString());
+
+        AppController.getInstance().create_notification();
+
     }
+
+
 }

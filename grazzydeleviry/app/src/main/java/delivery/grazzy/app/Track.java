@@ -40,6 +40,7 @@ import com.android.volley.Response;
 import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -56,6 +57,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -81,7 +83,7 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
     SupportMapFragment mapFragment;
 
     TextView pickup_time, pickup_address, order_no, delivery_time, delivery_address, passcode, total_cost_current_order, back, picked_up, verify, details;
-    ImageButton call_restaurant, call_customer;
+    ImageButton call_restaurant, call_customer, customer_photo;
 
     Location destination_location, source_location;
 
@@ -97,14 +99,16 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
     SimpleDateFormat newsdf;
     Date date = null;
 
-    Dialog loading;
+    Dialog loading, photo_pop_up;
 
     int CALL_PHONE_permission;
     int currentapiVersion;
 
-    StringRequest update_order_status;
+    StringRequest update_order_status, get_user_pic;
 
     LocationManager manager = null;
+
+    NetworkImageView user_pic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +124,11 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         loading.requestWindowFeature(Window.FEATURE_NO_TITLE);
         loading.setContentView(R.layout.loading);
 
+        photo_pop_up = new Dialog(Track.this);
+        photo_pop_up.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        photo_pop_up.setContentView(R.layout.list_popup);
+
+
         sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         newsdf = new SimpleDateFormat("hh:mm a ");
 
@@ -127,6 +136,8 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         newsdf.setTimeZone(TimeZone.getDefault());
 
         layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        user_pic = (NetworkImageView) photo_pop_up.findViewById(R.id.user_pic);
+        user_pic.setDefaultImageResId(R.drawable.user);
 
         destination_location = new Location("destination_location");
         source_location = new Location("source_location");
@@ -151,6 +162,7 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
         call_restaurant = (ImageButton) findViewById(R.id.call_restaurant);
         call_customer = (ImageButton) findViewById(R.id.call_customer);
+        customer_photo = (ImageButton) findViewById(R.id.customer_photo);
 
         call_restaurant.setOnClickListener(this);
         call_customer.setOnClickListener(this);
@@ -167,38 +179,32 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         delivery_address_bar = (RelativeLayout) findViewById(R.id.delivery_address_bar);
         restaurant_address_bar = (RelativeLayout) findViewById(R.id.restaurant_address_bar);
 
+
+        customer_photo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                get_user_pic();
+            }
+        });
+
         call_restaurant.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse("tel:" + AppController.getInstance().restaurant_phone));
                 if (ActivityCompat.checkSelfPermission(Track.this, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Track.this);
-                    builder.setMessage("Grazzy App requires Phone Call permission.Please grant them to continue.")
-                            .setTitle("Permission required");
-
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-
-                        public void onClick(DialogInterface dialog, int id) {
-                            Log.e("", "Clicked");
-                            makeRequest();
-                        }
-
-
-                    });
-
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-
-
-                } else {
-                    Intent callIntent = new Intent(Intent.ACTION_CALL);
-                    callIntent.setData(Uri.parse("tel:" + AppController.getInstance().restaurant_phone));
-                    startActivity(callIntent);
-                    }
-
-
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                startActivity(callIntent);
 
             }
         });
@@ -209,32 +215,19 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
             public void onClick(View v) {
 
 
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse("tel:" + AppController.getInstance().phone));
                 if (ActivityCompat.checkSelfPermission(Track.this, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Track.this);
-                    builder.setMessage("Grazzy App requires Phone Call permission.Please grant them to continue.")
-                            .setTitle("Permission required");
-
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-
-                        public void onClick(DialogInterface dialog, int id) {
-                            Log.e("", "Clicked");
-                            makeRequest();
-                        }
-
-
-                    });
-
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-
-
-                } else {
-                    Intent callIntent = new Intent(Intent.ACTION_CALL);
-                    callIntent.setData(Uri.parse("tel:" + AppController.getInstance().phone));
-                    startActivity(callIntent);
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
                 }
-
+                startActivity(callIntent);
 
 
             }
@@ -248,6 +241,95 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
         }
 
+    }
+
+    private void get_user_pic() {
+
+        loading.show();
+
+        get_user_pic = new StringRequest(Request.Method.POST,getString(R.string.base_url),
+
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        loading.dismiss();
+
+                        Log.e("response", "" +response);
+
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+
+                            String url;
+
+                            url = jsonObject.get("url").toString();
+
+
+                        } catch (JSONException e) {
+                            Log.e("JSONException", "" +e.toString());
+                        }
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+
+                String error_msg="";
+
+                Log.e("error", "" + volleyError.toString());
+
+                loading.dismiss();
+
+                if (volleyError instanceof TimeoutError || volleyError instanceof NoConnectionError)
+                {
+                    error_msg="No Internet Connection";
+
+                } else if (volleyError instanceof AuthFailureError)
+                {
+                    error_msg="Error Occured, Please try later" ;
+
+                } else if (volleyError instanceof ServerError)
+                {
+                    error_msg="Server Error, Please try later";
+
+                } else if (volleyError instanceof NetworkError)
+                {
+                    error_msg="Network Error, Please try later";
+
+                } else if (volleyError instanceof ParseError)
+                {
+                    error_msg="Error Occured, Please try later";
+                }
+
+                Toast.makeText(Track.this, error_msg, Toast.LENGTH_SHORT).show();
+
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams()
+            {
+                // TODO Auto-generated method stub
+
+                Map<String, String> params = new HashMap<String, String>();
+
+                params.put("order_id ", AppController.getInstance().id+"");
+
+                return params;
+
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError
+            {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Content-Type", "application/x-www-form-urlencoded");
+                return params;
+            }
+
+        };
+
+        AppController.getInstance().getRequestQueue().add(get_user_pic);
     }
 
 

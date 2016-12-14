@@ -32,7 +32,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".Verification" />
-        <activity android:name=".Home" />
+        <activity android:name=".Home"
+            android:launchMode="singleInstance"
+            />
         <activity android:name=".Track" />
         <activity android:name=".Feedback" />
 

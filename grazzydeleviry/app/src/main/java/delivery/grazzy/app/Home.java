@@ -503,6 +503,9 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
 
     private void get_new_orders() {
 
+        AppController.getInstance().no_of_notifications=0;
+        AppController.getInstance().nm.cancelAll();
+
         order_number.clear();
         id.clear();
         customer_id.clear();
@@ -534,6 +537,8 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+
+                        Log.e("response", "" + response);
 
                         if(response.contains("Orders could not be found"))
                         {
@@ -787,11 +792,15 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
             startLocationUpdates();
         }
 
-        if(AppController.getInstance().changed)
+        if(AppController.getInstance().changed || AppController.getInstance().no_of_notifications>0)
         {
             AppController.getInstance().changed=false;
+            AppController.getInstance().no_of_notifications=0;
+            AppController.getInstance().nm.cancelAll();
             get_new_orders();
         }
+
+
 
 
     }
