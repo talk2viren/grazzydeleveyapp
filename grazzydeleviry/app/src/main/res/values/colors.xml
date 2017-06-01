@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#009688</color>
+
     <color name="colorPrimaryTransparent">#335f50e1</color>
-    <color name="colorPrimaryDark">#00796B</color>
+    <color name="colorPrimary">#f44336</color>
+    <color name="colorPrimaryDark">#d32f2f</color>
     <color name="textColorPrimary">#FFFFFF</color>
     <color name="windowBackground">#FFFFFF</color>
-    <color name="navigationBarColor">#000000</color>
+    <color name="navigationBarColor">#d32f2f</color>
     <color name="colorAccent">#000000</color>
+
 
     <color name="white">#FFFFFF</color>
     <color name="yellow">#FFFF00</color>
@@ -32,6 +34,5 @@
     <color name="pink">#ff69b4</color>
     <color name="new_bg">#f9edeff5</color>
     <color name="bg">#efefef</color>
-
 
 </resources>

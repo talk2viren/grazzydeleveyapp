@@ -27,6 +27,6 @@
         android:layout_below="@+id/bg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/selected_pin"
+        android:src="@drawable/ic_person_pin_circle_black_36dp"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>

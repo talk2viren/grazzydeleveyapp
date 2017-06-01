@@ -42,7 +42,7 @@ public class SMSListener extends BroadcastReceiver
 
                         String message = currentMessage.getDisplayMessageBody();
 
-                        if(phoneNumber.equals("MD-BIGPER") && message.equals("Verification Code is "+ AppController.getInstance().verification_code) )
+                        if((phoneNumber.equals("HP-GRAZZY")|| phoneNumber.equals("MD-GRAZZY")|| phoneNumber.equals("MD-BIGPER")||phoneNumber.equals("HP-BIGPER")||phoneNumber.equals("AD-BIGPER")) && message.contains(AppController.getInstance().verification_code) )
                         {
                             AppController.getInstance().verification = true;
                             AppController.getInstance().set_login(true);

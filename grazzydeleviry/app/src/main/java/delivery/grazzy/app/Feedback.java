@@ -1,6 +1,8 @@
 package delivery.grazzy.app;
 
 import android.app.Dialog;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -58,6 +60,20 @@ public class Feedback extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+// add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+// finally change the color
+            window.setStatusBarColor(Color.parseColor(getString(R.string.my_statusbar_color)));
+        }
+
         setContentView(R.layout.feedback);
 
         ratingBar = (RatingBar) findViewById(R.id.ratingBar);
@@ -68,7 +84,7 @@ public class Feedback extends AppCompatActivity {
         loading.setContentView(R.layout.loading);
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("Feedback To Restaurant");
+        toolbar.setTitle("Feedback To "+getIntent().getExtras().getString("to"));
         setSupportActionBar(toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -81,7 +97,12 @@ public class Feedback extends AppCompatActivity {
         input_layout_name = (TextInputLayout) findViewById(R.id.input_layout_name);
 
 
-        msg.setText("You picked up order " + getIntent().getExtras().getString("to"));
+        if (getIntent().getExtras().getString("to").contains("Restaurant"))
+        {
+            msg.setText("You picked up order from Restaurant");
+        }else {
+            msg.setText("You delivered the order to the Customer");
+        }
 
 
         submit.setOnClickListener(new View.OnClickListener() {

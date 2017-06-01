@@ -15,8 +15,10 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -32,18 +34,20 @@ public class OrdersAdapter extends BaseAdapter implements View.OnClickListener {
     ArrayList<String> delivered_on;
     ArrayList<String> delivery_location;
     ArrayList<String> status;
+    ArrayList<String> distances_traveled;
     Home mContext;
 
     LayoutInflater inflater;
     Intent i;
     Bundle b;
 
-    SimpleDateFormat sdf;
+    SimpleDateFormat sdf,sdf_changed;
     SimpleDateFormat newsdf;
     Date date = null;
+    Calendar calendar;
+    Date d = null;
 
-
-    public OrdersAdapter(Activity activity, ArrayList<String> order_number, ArrayList<String> preparation_time, ArrayList<String> restaurant_name, ArrayList<String> delivered_on, ArrayList<String> delivery_location, ArrayList<String> status, Home mContext) {
+    public OrdersAdapter(Activity activity, ArrayList<String> order_number, ArrayList<String> preparation_time, ArrayList<String> restaurant_name, ArrayList<String> delivered_on, ArrayList<String> delivery_location, ArrayList<String> status, Home mContext,ArrayList<String>  distances_traveled) {
         // TODO Auto-generated constructor stub
         this.activity = activity;
         this.order_number = order_number;
@@ -52,15 +56,22 @@ public class OrdersAdapter extends BaseAdapter implements View.OnClickListener {
         this.delivered_on = delivered_on;
         this.delivery_location = delivery_location;
         this.status = status;
+        this.distances_traveled = distances_traveled;
         this.mContext = mContext;
         i = new Intent(activity, Track.class);
         b = new Bundle();
 
         sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        newsdf = new SimpleDateFormat("hh:mm a ");
+        sdf_changed = new SimpleDateFormat("HH:mm:ss");
 
+
+        sdf_changed.setTimeZone(TimeZone.getDefault());
         sdf.setTimeZone(TimeZone.getDefault());
+
+        newsdf = new SimpleDateFormat("hh:mm a ");
         newsdf.setTimeZone(TimeZone.getDefault());
+
+        calendar = Calendar.getInstance();
     }
 
     @Override
@@ -91,7 +102,6 @@ public class OrdersAdapter extends BaseAdapter implements View.OnClickListener {
             inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
-
         //new
         // the status is assigned
         //time and location name with accept buttion
@@ -113,12 +123,26 @@ public class OrdersAdapter extends BaseAdapter implements View.OnClickListener {
 
             order_no.setText("" + order_number.get(position));
             try {
-                delivery.setText("" + newsdf.format((Date) sdf.parse(delivered_on.get(position))) + "\n" + delivery_location.get(position));
+                delivery.setText("" + newsdf.format((Date) sdf_changed.parse(delivered_on.get(position))) + "\n" + delivery_location.get(position));
             } catch (Exception e) {
-                Log.e("date parse error"+position, e.toString());
+                Log.e("date parse error f1 "+position, e.toString());
             }
 
-            pickup.setText("" + preparation_time.get(position) + "\n" + restaurant_name.get(position));
+            try {
+                d = sdf_changed.parse(delivered_on.get(position));
+                calendar.setTime(d);
+                Log.e("calendar",calendar.getTime()+"");
+                Log.e("getTimeInMillis",calendar.getTimeInMillis()+"");
+
+                pickup.setText(( newsdf.format(calendar.getTimeInMillis()-Integer.parseInt(preparation_time.get(position))*60*1000))+ "\n" + restaurant_name.get(position));
+
+            } catch (Exception e) {
+                Log.e("ParseException f2 "+position, e.toString());
+            }
+
+
+
+
             action.setTextColor(ContextCompat.getColor(activity, R.color.colorPrimaryDark));
             action.setText("Accept");
 
@@ -141,12 +165,24 @@ public class OrdersAdapter extends BaseAdapter implements View.OnClickListener {
 
             order_no.setText("" + order_number.get(position));
             try {
-                delivery.setText("" + newsdf.format((Date) sdf.parse(delivered_on.get(position))) + "\n" + delivery_location.get(position));
+                delivery.setText("" + newsdf.format((Date) sdf_changed.parse(delivered_on.get(position))) + "\n" + delivery_location.get(position));
             } catch (Exception e) {
                 Log.e("date parse error"+position, e.toString());
             }
 
-            pickup.setText("" + preparation_time.get(position) + "\n" + restaurant_name.get(position));
+            try {
+                d = sdf_changed.parse(delivered_on.get(position));
+                calendar.setTime(d);
+                Log.e("calendar",calendar.getTime()+"");
+                Log.e("getTimeInMillis",calendar.getTimeInMillis()+"");
+
+                pickup.setText(( newsdf.format(calendar.getTimeInMillis()-Integer.parseInt(preparation_time.get(position))*60*1000))+ "\n" + restaurant_name.get(position));
+
+            } catch (Exception e) {
+                Log.e("ParseException"+position, e.toString());
+            }
+
+
             action.setTextColor(ContextCompat.getColor(activity, R.color.black));
             action.setText(status.get(position)+"");
             row.setTag(position+"");
@@ -168,14 +204,25 @@ public class OrdersAdapter extends BaseAdapter implements View.OnClickListener {
 
             order_no.setText("" + order_number.get(position));
             try {
-                delivery.setText("" + newsdf.format((Date) sdf.parse(delivered_on.get(position))) + "\n" + delivery_location.get(position));
+                delivery.setText("" + newsdf.format((Date) sdf_changed.parse(delivered_on.get(position))) + "\n" + delivery_location.get(position));
             } catch (Exception e) {
                 Log.e("date parse error"+position, e.toString());
             }
 
-            pickup.setText("" + preparation_time.get(position) + "\n" + restaurant_name.get(position));
+            try {
+                d = sdf_changed.parse(delivered_on.get(position));
+                calendar.setTime(d);
+                Log.e("calendar",calendar.getTime()+"");
+                Log.e("getTimeInMillis",calendar.getTimeInMillis()+"");
+
+                pickup.setText(( newsdf.format(calendar.getTimeInMillis()-Integer.parseInt(preparation_time.get(position))*60*1000))+ "\n" + restaurant_name.get(position));
+
+            } catch (Exception e) {
+                Log.e("ParseException"+position, e.toString());
+            }
+
             action.setTextColor(ContextCompat.getColor(activity, R.color.black));
-            action.setText("Delivered");
+            action.setText(distances_traveled.get(position));
 
 
 

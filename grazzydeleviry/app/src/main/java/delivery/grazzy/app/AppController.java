@@ -63,6 +63,7 @@ public class AppController extends Application {
     PendingIntent pendingIntent;
     Uri alarmSound;
     NotificationManager nm;
+    String restaurant_name;
 
 
     @Override
@@ -151,7 +152,7 @@ public class AppController extends Application {
 
         // Content title, which appears in large type at the top of the
         // notification
-        builder.setContentTitle("Grazzy");
+        builder.setContentTitle("Eatsapp");
 
         // Content text, which appears in smaller text below the title
         builder.setContentText("You have " + no_of_notifications + " notifications");

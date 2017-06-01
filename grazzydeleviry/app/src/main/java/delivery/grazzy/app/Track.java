@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -26,6 +27,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -54,6 +56,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -66,8 +69,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -77,13 +82,18 @@ import java.util.TimeZone;
 /**
  * Created by developer.nithin@gmail.com
  */
-public class Track extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
+public class Track extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+ 
+    String  dis_trav = "";
+    Boolean show_current_location=false;
+    
 
     private GoogleMap mMap;
     SupportMapFragment mapFragment;
 
     TextView pickup_time, pickup_address, order_no, delivery_time, delivery_address, passcode, total_cost_current_order, back, picked_up, verify, details;
-    ImageButton call_restaurant, call_customer, customer_photo;
+    ImageButton call_restaurant, call_customer, customer_photo,my_location;
 
     Location destination_location, source_location;
 
@@ -95,25 +105,66 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
     RelativeLayout delivery_address_bar, restaurant_address_bar;
 
-    SimpleDateFormat sdf;
-    SimpleDateFormat newsdf;
+    Marker marker;
+
+//    SimpleDateFormat sdf;
+    SimpleDateFormat sdf_changed;
     Date date = null;
+    SimpleDateFormat newsdf;
 
     Dialog loading, photo_pop_up;
 
     int CALL_PHONE_permission;
     int currentapiVersion;
 
-    StringRequest update_order_status, get_user_pic;
+    StringRequest update_order_status, get_user_pic,get_delivery_boy_location,insert_location_into_db;
 
     LocationManager manager = null;
 
     NetworkImageView user_pic;
+    Calendar calendar;
+    Date d = null;
+
+    Handler handler = null;
+    Runnable t;
+
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
+    private Location mLastLocation;
+
+    private GoogleApiClient mGoogleApiClient;
+    private boolean mRequestingLocationUpdates = true;
+    private LocationRequest mLocationRequest;
+    private com.google.android.gms.location.LocationListener locationListener;
+
+    // Location updates intervals in sec
+    private static int UPDATE_INTERVAL = 3000; // 3 sec
+    private static int FATEST_INTERVAL = 3000; // 3 sec
+    private static int DISPLACEMENT = 10; // 10 meters
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.e("track","v7");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+// add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+// finally change the color
+            window.setStatusBarColor(Color.parseColor(getString(R.string.my_statusbar_color)));
+        }
+
         setContentView(R.layout.track);
+
+        calendar = Calendar.getInstance();
 
         CALL_PHONE_permission = ContextCompat.checkSelfPermission(Track.this,
                 "android.permission.CALL_PHONE_permission");
@@ -129,10 +180,12 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         photo_pop_up.setContentView(R.layout.list_popup);
 
 
-        sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         newsdf = new SimpleDateFormat("hh:mm a ");
+        sdf_changed = new SimpleDateFormat("HH:mm:ss");
 
-        sdf.setTimeZone(TimeZone.getDefault());
+        sdf_changed.setTimeZone(TimeZone.getDefault());
+//        sdf.setTimeZone(TimeZone.getDefault());
         newsdf.setTimeZone(TimeZone.getDefault());
 
         layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -163,15 +216,29 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         call_restaurant = (ImageButton) findViewById(R.id.call_restaurant);
         call_customer = (ImageButton) findViewById(R.id.call_customer);
         customer_photo = (ImageButton) findViewById(R.id.customer_photo);
+        my_location = (ImageButton)findViewById(R.id.my_location);
 
         call_restaurant.setOnClickListener(this);
         call_customer.setOnClickListener(this);
 
 
-        pickup_time.setText("Pick-up : " + AppController.getInstance().preparation_time);
+        try {
+            d = sdf_changed.parse(AppController.getInstance().delivered_on);
+            calendar.setTime(d);
+
+
+        } catch (Exception e) {
+            Log.e("ParseException A", e.toString());
+        }
+
+        pickup_time.setText("Pick-up : " + ( newsdf.format(calendar.getTimeInMillis()-Integer.parseInt(AppController.getInstance().preparation_time)*60*1000)));
         pickup_address.setText(AppController.getInstance().restaurant_address);
         order_no.setText("# " + AppController.getInstance().order_number);
-        delivery_time.setText("Deliver : " + AppController.getInstance().delivered_on);
+        try {
+            delivery_time.setText("Deliver : " + newsdf.format((Date) sdf_changed.parse(AppController.getInstance().delivered_on)));
+        } catch (Exception e) {
+            Log.e("Exception B", e.toString());
+        }
         delivery_address.setText(AppController.getInstance().delivery_location);
         passcode.setText("Passcode : " + AppController.getInstance().passcode);
         total_cost_current_order.setText("Rs. " + AppController.getInstance().total_cost);
@@ -185,6 +252,33 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
             public void onClick(View v) {
 
                 get_user_pic();
+            }
+        });
+
+        my_location.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+                    if(mLastLocation!=null)
+                    {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Float.parseFloat(mLastLocation.getLatitude() + ""), Float.parseFloat(mLastLocation.getLongitude() + "")), ((mMap.getMaxZoomLevel() + mMap.getMinZoomLevel()) / 2) + ((mMap.getMaxZoomLevel() + mMap.getMinZoomLevel()) / 4)));
+
+                        show_current_location=false;
+                    }else{
+
+                        Toast toast = Toast.makeText(Track.this," Fetching Location... ",Toast.LENGTH_LONG);
+                        toast.getView().setBackgroundResource(R.color.colorPrimary);
+                        toast.show();
+
+                        show_current_location=true;
+                    }
+
+                } else {
+                    buildAlertMessageNoGps();
+                }
+
             }
         });
 
@@ -241,13 +335,108 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
         }
 
+        if (checkPlayServices()) {
+            // Building the GoogleApi client
+
+            Log.e("checkPlayServices","was true");
+            buildGoogleApiClient();
+
+            createLocationRequest();
+        }
+        
+        locationListener = new com.google.android.gms.location.LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+
+                Log.e("location", "changed");
+                Log.e("location", location.toString());
+                mLastLocation = location;
+
+                if (mLastLocation != null) {
+
+                    if(show_current_location)
+                    {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Float.parseFloat(mLastLocation.getLatitude() + ""), Float.parseFloat(mLastLocation.getLongitude() + "")), ((mMap.getMaxZoomLevel() + mMap.getMinZoomLevel()) / 2) + ((mMap.getMaxZoomLevel() + mMap.getMinZoomLevel()) / 4)));
+
+                        show_current_location=false;
+                        insert_location_into_db();
+                    }
+
+
+                }
+
+            }
+
+        };
+
+        Log.e("verify","enabled : "+AppController.getInstance().status.contains("Picked Up"));
+
+        if(AppController.getInstance().status.contains("Picked Up"))
+        {
+            verify.setEnabled(true);
+        }
+
     }
+
+
+    private void insert_location_into_db() {
+
+        insert_location_into_db = new StringRequest(Request.Method.POST,getString(R.string.base_url)+getString(R.string.addlocation),
+
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+
+
+                        Log.e("location insert", "" +response);
+
+
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+
+
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams()
+            {
+                // TODO Auto-generated method stub
+
+                Map<String, String> params = new HashMap<String, String>();
+
+                params.put("deliveryboy_id",""+AppController.getInstance().sharedPreferences.getString("id", ""));
+                params.put("latitude",""+mLastLocation.getLatitude());
+                params.put("langitude",""+mLastLocation.getLongitude());
+
+                return params;
+
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError
+            {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Content-Type", "application/x-www-form-urlencoded");
+                return params;
+            }
+
+        };
+
+        AppController.getInstance().getRequestQueue().add(insert_location_into_db);
+    }
+    
 
     private void get_user_pic() {
 
         loading.show();
 
-        get_user_pic = new StringRequest(Request.Method.POST,getString(R.string.base_url),
+        get_user_pic = new StringRequest(Request.Method.POST,getString(R.string.base_url)+getString(R.string.Profilepicture) ,
 
                 new Response.Listener<String>() {
                     @Override
@@ -352,6 +541,10 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
         mMap = googleMap;
 
+        View locationButton = ((View) mapFragment.getView().findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+
+
+
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -364,6 +557,7 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         }else
         {
             mMap.setMyLocationEnabled(true);
+            locationButton.setVisibility(View.GONE);
         }
 
 
@@ -419,6 +613,218 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         return url;
     }
 
+    private void start_tracking() {
+
+        handler = new Handler();
+        t = new Runnable() {
+            @Override
+            public void run() {
+                get_customer_location();
+               
+                handler.postDelayed(this, 5000);
+            }
+        };
+        handler.postDelayed(t, 0);
+
+
+    }
+
+
+    private void get_customer_location() {
+
+        get_delivery_boy_location = new StringRequest(getString(R.string.base_url) + getString(R.string.customerlocation)+AppController.getInstance().customer_id,
+
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        Log.e("get_customer_location",response);
+
+                            try {
+
+                                JSONObject jsonObject = new JSONObject(response);
+//                                Double.parseDouble(jsonObject.getString("latitude")),Double.parseDouble(jsonObject.getString("langitude"))
+
+
+                               if(marker!=null)
+                               {
+                                   marker.remove();
+                               }
+
+                                View customMarkerView;
+                                TextView time;
+                                Bitmap returnedBitmap;
+                                Canvas canvas;
+                                Drawable drawable;
+
+                                customMarkerView = layoutInflater.inflate(R.layout.customer_marker, null);
+                                time = (TextView) customMarkerView.findViewById(R.id.time);
+                                time.setText("Customer Location");
+
+
+                                customMarkerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                                customMarkerView.layout(0, 0, customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight());
+                                customMarkerView.buildDrawingCache();
+                                returnedBitmap = Bitmap.createBitmap(customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight(),
+                                        Bitmap.Config.ARGB_8888);
+                                canvas = new Canvas(returnedBitmap);
+                                canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC_IN);
+                                drawable = customMarkerView.getBackground();
+                                if (drawable != null)
+                                    drawable.draw(canvas);
+                                customMarkerView.draw(canvas);
+
+
+                                marker = mMap.addMarker(new MarkerOptions()
+                                        .position(new LatLng(Double.parseDouble(jsonObject.getString("latitude")),Double.parseDouble(jsonObject.getString("langitude"))))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(returnedBitmap)));
+
+
+
+                            } catch (Exception e) {
+
+                                Log.e("getdeliveryboylocation", "" + e.toString());
+                            }
+                        }
+
+
+
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+
+
+                    String error_msg = "";
+
+                    Log.e("error", "" + volleyError.toString());
+
+                    loading.dismiss();
+
+                    if (volleyError instanceof TimeoutError || volleyError instanceof NoConnectionError) {
+                        error_msg = "No Internet Connection";
+
+                    } else if (volleyError instanceof AuthFailureError) {
+                        error_msg = "Error Occured, Please try later";
+
+                    } else if (volleyError instanceof ServerError) {
+                        error_msg = "Server Error, Please try later";
+
+                    } else if (volleyError instanceof NetworkError) {
+                        error_msg = "Network Error, Please try later";
+
+                    } else if (volleyError instanceof ParseError) {
+                        error_msg = "Error Occured, Please try later";
+                    }
+
+
+                    Toast toast = Toast.makeText(Track.this," "+error_msg+" ",Toast.LENGTH_LONG);
+                    toast.getView().setBackgroundResource(R.color.colorPrimary);
+                    toast.show();
+                }
+
+
+        })  ;
+
+        AppController.getInstance().getRequestQueue().add(get_delivery_boy_location);
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.e("onPause", "onPause");
+
+        if (handler != null) {
+            handler.removeCallbacks(t);
+        }
+
+        stopLocationUpdates();
+    }
+
+    protected void createLocationRequest() {
+//        Log.e("createLocationRequest","createLocationRequest");
+
+
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(FATEST_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+
+//        Log.e("buildGoogleApiClient","buildGoogleApiClient");
+
+
+        mGoogleApiClient = new GoogleApiClient.Builder(Track.this).addConnectionCallbacks(this).addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
+    }
+
+    private boolean checkPlayServices() {
+//        Log.e("checkPlayServices","checkPlayServices");
+
+
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(Track.this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+                GooglePlayServicesUtil.getErrorDialog(resultCode,Track.this, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Toast.makeText(Track.this, "This device is not supported.", Toast.LENGTH_LONG).show();
+
+            }
+            return false;
+        }
+        return true;
+    }
+
+    protected void stopLocationUpdates() {
+        Log.e("stopLocationUpdates","stopLocationUpdates");
+
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, locationListener);
+    }
+
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+        Log.e("onConnectionFailed",  connectionResult.getErrorCode()+"");
+
+    }
+
+
+
+    @Override
+    public void onConnected(Bundle arg0) {
+        // Once connected with google api, get the location
+
+        Log.e("onConnected","onConnected");
+
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int arg0) {
+        Log.e("onConnectionSuspended","onConnectionSuspended");
+
+        mGoogleApiClient.connect();
+    }
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+
+            Log.e("onStart","connect");
+
+        }
+
+    }
+
+
     private void update_order_status(final String status_value) {
 
         loading.show();
@@ -434,6 +840,7 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
                             if(status_value.contains("Picked Up"))
                             {
+                                verify.setEnabled(true);
                                 AppController.getInstance().status="Picked Up";
                                 AppController.getInstance().changed=true;
                                 startActivity(new Intent(Track.this,Feedback.class).putExtra("to","Restaurant"));
@@ -490,6 +897,7 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
                 params.put("id", "" + AppController.getInstance().id);
                 params.put("status", status_value);
+                params.put("distance", dis_trav);
 
                 Log.e("params", "" + params.toString());
 
@@ -605,6 +1013,7 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 
                 // Starts parsing data
                 routes = parser.parse(jObject);
+                dis_trav = parser.get_dist_trav();
 
 //                Log.e("jObject", jObject.toString());
 
@@ -636,13 +1045,10 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
             Canvas canvas;
             Drawable drawable;
 
-            customMarkerView = layoutInflater.inflate(R.layout.custom_marker, null);
+            customMarkerView = layoutInflater.inflate(R.layout.custom_restaurant, null);
             time = (TextView) customMarkerView.findViewById(R.id.time);
-            try {
-                time.setText("" + newsdf.format((Date) sdf.parse(AppController.getInstance().delivered_on)) + "\n" + "Delivery Location");
-            } catch (Exception e) {
-                Log.e("date parse error", e.toString());
-            }
+            time.setText(AppController.getInstance().restaurant_name + " \n" + ( newsdf.format(calendar.getTimeInMillis()-Integer.parseInt(AppController.getInstance().preparation_time)*60*1000)));
+
 
             customMarkerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             customMarkerView.layout(0, 0, customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight());
@@ -657,16 +1063,26 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
             customMarkerView.draw(canvas);
 
 
-
+            Log.e("source","while drawing"+source_location.toString());
 
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(source_location.getLatitude(),source_location.getLongitude()))
                     .icon(BitmapDescriptorFactory.fromBitmap(returnedBitmap)));
 
 
-            customMarkerView = layoutInflater.inflate(R.layout.custom_restaurant, null);
+
+
+
+            customMarkerView = layoutInflater.inflate(R.layout.custom_marker, null);
             time = (TextView) customMarkerView.findViewById(R.id.time);
-            time.setText("" +AppController.getInstance().preparation_time + "\n" + "Pick-up Location");
+
+
+            try {
+                time.setText(AppController.getInstance().firstname + " \n" + newsdf.format((Date) sdf_changed.parse(AppController.getInstance().delivered_on)));
+            } catch (Exception e) {
+                Log.e("date parse error C", e.toString());
+            }
+
 
             customMarkerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             customMarkerView.layout(0, 0, customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight());
@@ -687,6 +1103,8 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
 //            } catch (Exception e) {
 //                Log.e("date parse error", e.toString());
 //            }
+
+            Log.e("dest","while drawing"+destination_location.toString());
 
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(destination_location.getLatitude(),destination_location.getLongitude()))
@@ -737,9 +1155,9 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
             LatLngBounds bounds = builder.build();
 
 
-            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
 
-            Log.e("bound", 50 + "");
+            Log.e("bound", 200 + "");
 
             drawn=true;
 
@@ -786,11 +1204,38 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
         return data;
     }
 
+    protected void startLocationUpdates() {
+
+//        Log.e("startLocationUpdates","startLocationUpdates");
+
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+        }else {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, locationListener);
+        }
+
+    }
+
 
 
     @Override
     public void onResume() {
         super.onResume();
+
+        checkPlayServices();
+
+        // Resuming the periodic location updates
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
 
         if (mMap == null) {
             mapFragment = (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map);
@@ -811,7 +1256,13 @@ public class Track extends AppCompatActivity implements OnMapReadyCallback, View
             verify.setVisibility(View.INVISIBLE);
         }
 
+        Log.e("order_type",AppController.getInstance().order_type);
 
+       if(AppController.getInstance().order_type.contains("1"))
+       {
+           Log.e("order_type","true");
+           start_tracking();
+       }
 
     }
 

@@ -42,7 +42,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Name"
-                        android:text="Nithin"/>
+                        android:text=""/>
 
                 </android.support.design.widget.TextInputLayout>
 
@@ -54,7 +54,7 @@
                     android:layout_height="wrap_content">
 
                     <EditText
-                        android:text="7259575485"
+                        android:text=""
                         android:id="@+id/input_ph"
                         android:maxLength="10"
                         android:maxLines="1"

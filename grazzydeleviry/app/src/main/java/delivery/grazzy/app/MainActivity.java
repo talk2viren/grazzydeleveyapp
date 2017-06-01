@@ -44,6 +44,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+// add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+// finally change the color
+            window.setStatusBarColor(Color.parseColor(getString(R.string.my_statusbar_color)));
+        }
+
 
         COARSE_LOCATION_permission = ContextCompat.checkSelfPermission(MainActivity.this,
                 "android.permission.ACCESS_COARSE_LOCATION");
@@ -98,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                     AppController.getInstance().sharedPreferences_editor.putString("phone", input_ph.getText().toString());
                     AppController.getInstance().sharedPreferences_editor.commit();
 
-                    int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+                    int currentapiVersion = Build.VERSION.SDK_INT;
 
                     Log.e("currentapiVersion " , currentapiVersion+"");
 
@@ -194,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         if (COARSE_LOCATION_permission != PackageManager.PERMISSION_GRANTED || FINE_LOCATION_permission != PackageManager.PERMISSION_GRANTED || READ_SMS_permission != PackageManager.PERMISSION_GRANTED || RECEIVE_SMS_permission != PackageManager.PERMISSION_GRANTED || CALL_PHONE_permission != PackageManager.PERMISSION_GRANTED ) {
             Log.e("", "COARSE_LOCATION_permission "+COARSE_LOCATION_permission +" FINE_LOCATION_permission "+FINE_LOCATION_permission+" READ_SMS_permission "+READ_SMS_permission +" RECEIVE_SMS_permission "+RECEIVE_SMS_permission);
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setMessage("Grazzy App requires SMS and Location permissions.Please grant them to continue.")
+            builder.setMessage("Eatsapp App requires SMS and Location permissions.Please grant them to continue.")
                     .setTitle("Permission required");
 
             builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {

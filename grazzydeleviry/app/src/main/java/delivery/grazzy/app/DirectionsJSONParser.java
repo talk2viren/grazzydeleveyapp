@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class DirectionsJSONParser {
 
     int total_time=0;
+    String  dis_trav = "";
 
     /** Receives a JSONObject and returns a list of lists containing latitude and longitude */
     public List<List<HashMap<String,String>>> parse(JSONObject jObject){
@@ -26,6 +27,7 @@ public class DirectionsJSONParser {
         JSONArray jRoutes = null;
         JSONArray jLegs = null;
         JSONArray jSteps = null;
+
 
         String temp_name;
 
@@ -40,7 +42,18 @@ public class DirectionsJSONParser {
 
                 /** Traversing all legs */
                 for(int j=0;j<jLegs.length();j++){
+
+
+
                     jSteps = ( (JSONObject)jLegs.get(j)).getJSONArray("steps");
+                    try
+                    {
+                        dis_trav = ( (JSONObject)jLegs.get(j)).getJSONObject("distance").getString("text");
+                        Log.e("dis_trav",dis_trav);
+                    }catch (Exception e)
+                    {
+                        Log.e("distance trav ex",e.toString());
+                    }
 
                     /** Traversing all steps */
                     for(int k=0;k<jSteps.length();k++){
@@ -136,6 +149,13 @@ public class DirectionsJSONParser {
         {
             return total_time+" mins";
         }
+
+    }
+
+
+    public String get_dist_trav() {
+
+        return  dis_trav;
 
     }
 }

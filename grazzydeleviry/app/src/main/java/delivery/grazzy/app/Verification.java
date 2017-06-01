@@ -6,6 +6,7 @@ package delivery.grazzy.app;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.provider.Settings;
@@ -19,6 +20,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -72,6 +74,21 @@ public class Verification extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e("verification","v1");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+// add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+// finally change the color
+            window.setStatusBarColor(Color.parseColor(getString(R.string.my_statusbar_color)));
+        }
+
         setContentView(R.layout.verification);
 
         mInstance=this;
@@ -247,7 +264,8 @@ public class Verification extends AppCompatActivity {
 
         verification_code=""+random.nextInt(9)+random.nextInt(9)+random.nextInt(9)+random.nextInt(9);
         AppController.getInstance().verification_code=verification_code;
-        url = getString(R.string.sms)+getString(R.string.user_name)+"&"+getString(R.string.password)+"&sender=BIGPER&to="+Ph+"&message=Verification+Code+is+"+verification_code+"&route_id=7";
+//        url = getString(R.string.sms)+getString(R.string.user_name)+"&"+getString(R.string.password)+"&sender=BIGPER&to="+Ph+"&message=Verification+Code+is+"+verification_code+"&route_id=7";
+        url =getString(R.string.sms_new)+getString(R.string.user_name_new)+"&"+getString(R.string.password_new)+"&senderid=GRAZZY&dest_mobileno="+Ph+"&tempid=44246&F1="+verification_code+"&response=Y";
 
         Log.e("url", ""+url);
 

@@ -5,9 +5,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.design.widget.Snackbar;
@@ -21,11 +23,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import com.android.volley.AuthFailureError;
@@ -51,9 +56,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by developer.nithin@gmail.com
@@ -94,6 +102,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
     ArrayList<String> delivered_on = new ArrayList<String>();
     ArrayList<String> delivery_location = new ArrayList<String>();
     ArrayList<String> customer_image = new ArrayList<String>();
+    ArrayList<String> distances_traveled = new ArrayList<String>();
 
 
     OrdersAdapter ordersAdapter;
@@ -132,7 +141,25 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.e("homev","5");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+// add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+// finally change the color
+            window.setStatusBarColor(Color.parseColor(getString(R.string.my_statusbar_color)));
+        }
+
         setContentView(R.layout.home);
+
+
 
         mContext = this;
 
@@ -158,7 +185,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
         listView = (ListView) findViewById(R.id.listView);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("Grazzy Delivery App");
+        toolbar.setTitle("Eatsapp Delivery App");
         setSupportActionBar(toolbar);
 
         new_bg.setOnClickListener(this);
@@ -166,7 +193,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
         delivered_bg.setOnClickListener(this);
         logout_bg.setOnClickListener(this);
 
-        ordersAdapter = new OrdersAdapter(Home.this, order_number, preparation_time, restaurant_name, delivered_on, delivery_location, status, mContext);
+        ordersAdapter = new OrdersAdapter(Home.this, order_number, preparation_time, restaurant_name, delivered_on, delivery_location, status, mContext,distances_traveled);
         listView.setAdapter(ordersAdapter);
 
         listView.addHeaderView(header_layout);
@@ -350,7 +377,11 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
 
     }
 
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
 
     @Override
     public void onConnected(Bundle arg0) {
@@ -503,34 +534,18 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
 
     private void get_new_orders() {
 
+        Log.e("flag","1");
+
         AppController.getInstance().no_of_notifications=0;
         AppController.getInstance().nm.cancelAll();
 
-        order_number.clear();
-        id.clear();
-        customer_id.clear();
-        customer_name.clear();
-        restaurant_id.clear();
-        restaurant_name.clear();
-        restaurant_phone.clear();
-        restaurant_address.clear();
-        restaurant_latitude.clear();
-        restaurant_langitude.clear();
-        preparation_time.clear();
-        phone.clear();
-        ordered_on.clear();
-        status.clear();
-        order_type.clear();
-        total_cost.clear();
-        shipping_lat.clear();
-        shipping_long.clear();
-        delivered_by.clear();
-        passcode.clear();
-        delivered_on.clear();
-        delivery_location.clear();
-        customer_image.clear();
+        Log.e("flag","2");
+
+        Log.e("url",getString(R.string.base_url) + getString(R.string.orders) + AppController.getInstance().sharedPreferences.getString("id", ""));
 
         loading.show();
+
+        Log.e("flag","4");
 
         get_new_orders = new StringRequest(Request.Method.GET, getString(R.string.base_url) + getString(R.string.orders) + AppController.getInstance().sharedPreferences.getString("id", ""),
 
@@ -539,6 +554,31 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                     public void onResponse(String response) {
 
                         Log.e("response", "" + response);
+
+                        distances_traveled.clear();
+                        order_number.clear();
+                        id.clear();
+                        customer_id.clear();
+                        customer_name.clear();
+                        restaurant_id.clear();
+                        restaurant_name.clear();
+                        restaurant_phone.clear();
+                        restaurant_address.clear();
+                        restaurant_latitude.clear();
+                        restaurant_langitude.clear();
+                        preparation_time.clear();
+                        phone.clear();
+                        ordered_on.clear();
+                        status.clear();
+                        order_type.clear();
+                        total_cost.clear();
+                        shipping_lat.clear();
+                        shipping_long.clear();
+                        delivered_by.clear();
+                        passcode.clear();
+                        delivered_on.clear();
+                        delivery_location.clear();
+                        customer_image.clear();
 
                         if(response.contains("Orders could not be found"))
                         {
@@ -583,6 +623,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                                     delivered_on.add(jsonArray.getJSONObject(i).get("delivered_on").toString());
                                     delivery_location.add(jsonArray.getJSONObject(i).get("delivery_location").toString());
                                     customer_image.add(jsonArray.getJSONObject(i).get("customer_image").toString());
+                                    distances_traveled.add(jsonArray.getJSONObject(i).get("distance").toString());
 
 
                                 }
@@ -633,15 +674,49 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
             }
         });
 
+        Log.e("flag","5");
+
+
         AppController.getInstance().getRequestQueue().add(get_new_orders);
+
+
+        Log.e("flag","6");
 
 
     }
 
     public void accept_popup(final int position) {
 
+        String pickup="";
+
+        SimpleDateFormat sdf_changed,newsdf;
+        Calendar calendar;
+        Date d = null;
+
+        sdf_changed = new SimpleDateFormat("HH:mm:ss");
+        newsdf = new SimpleDateFormat("hh:mm a ");
+
+        newsdf.setTimeZone(TimeZone.getDefault());
+        calendar = Calendar.getInstance();
+
+        pickup=preparation_time.get(position);
+
+        try {
+
+            d = sdf_changed.parse(delivered_on.get(position));
+            calendar.setTime(d);
+            pickup = newsdf.format(calendar.getTimeInMillis()-Integer.parseInt(preparation_time.get(position))*60*1000);
+
+        } catch (Exception e) {
+
+            Log.e("Exception", "" + e.toString());
+        }
+
+
+
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
-        builder.setMessage("Do you want to accept order #" + order_number.get(position) + " ? Pickup from " + restaurant_name.get(position) + " (" + restaurant_address.get(position) + ") at " + preparation_time.get(position) + " and deliver to " + delivery_location.get(position) + " by " + delivered_on.get(position)).setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        builder.setMessage("Order Details : \n #" + order_number.get(position) + "  Pickup from " + restaurant_name.get(position) + " (" + restaurant_address.get(position) + ") at " + pickup+ " and deliver to " + delivery_location.get(position) + " by " + delivered_on.get(position)).setCancelable(false).setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
 
                 dialog.cancel();
@@ -653,11 +728,6 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
                 } else {
                     update_order_status(position, "Accepted");
                 }
-
-            }
-        }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                dialog.cancel();
 
             }
         });
@@ -768,6 +838,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
         AppController.getInstance().delivery_location=delivery_location.get(position);
         AppController.getInstance().firstname=customer_name.get(position);
         AppController.getInstance().phone=phone.get(position);
+        AppController.getInstance().restaurant_name=restaurant_name.get(position);
         AppController.getInstance().restaurant_address=restaurant_address.get(position);
         AppController.getInstance().restaurant_phone=restaurant_phone.get(position);
         AppController.getInstance().preparation_time=preparation_time.get(position);
@@ -794,6 +865,8 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
 
         if(AppController.getInstance().changed || AppController.getInstance().no_of_notifications>0)
         {
+            Log.e("flag","0");
+
             AppController.getInstance().changed=false;
             AppController.getInstance().no_of_notifications=0;
             AppController.getInstance().nm.cancelAll();
@@ -801,7 +874,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener, Goo
         }
 
 
-
+        Log.e("flag","0.1");
 
     }
 

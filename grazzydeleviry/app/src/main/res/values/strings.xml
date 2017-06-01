@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Delivery App</string>
     <string name="title_activity_maps">Map</string>
-    <string name="base_url">http://grazzy.way2gps.com/index.php/api/</string>
+    <!--<string name="base_url">http://app.eatsapp.in/index.php/api/</string>-->
+    <string name="base_url">http://app.eatsapp.in/index.php/api/</string>
     <string name="Name">firstname</string>
     <string name="phone_number">phone</string>
     <string name="sms">http://smssigma.com/API/WebSMS/Http/v1.0a/index.php?</string>
@@ -13,4 +14,12 @@
     <string name="changestatus">changeorderstatus</string>
     <string name="delboyfeedback">delboyTorestfeedback</string>
     <string name="addlocation">adddelboylocation</string>
+    <string name="Profilepicture">OrderProfilepicture</string>
+    <string name="customerlocation">customerlocation/</string>
+    <string name="my_statusbar_color">#f44336</string>
+
+    <string name="sms_new">http://123.63.33.43/blank/sms/user/urlsmstemp.php?</string>
+    <string name="user_name_new">username=wolotech</string>
+    <string name="password_new">pass=wolotech@654</string>
+
 </resources>
